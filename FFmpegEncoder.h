@@ -166,7 +166,7 @@ public:
 	///
 	/// @param  [in/opt] fileName  The name of the file to which encoded results are written.
 	///
-	int open(const char *fileName = NULL);
+	int open();
 
 	///
 	/// @brief  Close the codec, output file and release the memories

@@ -35,8 +35,8 @@ XCODERS_API int xcoder_create(xcoder_t *ppcoder);
  */
 enum xcoder_format_t {
     XCODER_FMT_I420,
-    XCODER_FMT_RGBA,
     XCODER_FMT_AVC,
+    XCODER_FMT_RGBA,
 };
 
 /** 

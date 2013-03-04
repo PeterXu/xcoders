@@ -341,7 +341,7 @@ int FFmpegEncoder::encodeAudioData(short *frameData, int dataSize)
 //
 //////////////////////////////////////////////////////////////////////////
 
-int FFmpegEncoder::open(const char *fileName)
+int FFmpegEncoder::open()
 {
 	LOGI("FFmpegEncoder.open, begin!");
 	if (this->opened)
