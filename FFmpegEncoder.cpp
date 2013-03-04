@@ -125,12 +125,12 @@ int FFmpegEncoder::encodeVideoFrame(const uint8_t *frameData)
 
     if (!this->encodeVideo)
     {
-        return -2;
+        return -1;
     }
 
     if (this->hasOutput)
     {
-        return -3;
+        return -1;
     }
 
     // encode the image frame

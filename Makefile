@@ -7,7 +7,7 @@ CXX = g++
 INCLUDES = -I${IVYFFMPEG_ROOT}/ffmpeg/
 LIBS = -L${IVYFFMPEG_ROOT}/ffmpeg/build/win32/lib -lavcodec -lavutil -lavformat -lswscale 
 CFLAGS = -Wall -Werror -DXCODERS_EXPORTS
-LINKFLAGS = -shared -Wl,--export-all-symbols,--output-def,xcoders.def,--out-implib,xcoders.lib
+LINKFLAGS = -shared -Wl,--output-def,xcoders.def,--out-implib,xcoders.lib
 
 C_SOURCES = $(wildcard *.c)
 C_OBJS = $(patsubst %.c, %.o, $(C_SOURCES))

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "FFmpegDecoder.h"
+#include "LogTrace.h"
 
 FFmpegDecoder::FFmpegDecoder(const FFmpegVideoParam &vp, const FFmpegAudioParam &ap) : 
     videoParam(vp), audioParam(ap)
@@ -103,8 +104,10 @@ double FFmpegDecoder::getDecodeTimeStamp() const
 
 int FFmpegDecoder::open(const char *fileName)
 {
+	LOGI("FFmpegDecoder.open, begin!");
     if (this->opened)
     {
+		 LOGW("FFmpegDecoder.open, try to reopen!");
         return -1;
     }
 
@@ -112,6 +115,7 @@ int FFmpegDecoder::open(const char *fileName)
     if (!this->hasInput && this->videoParam.videoCodecName.empty() && 
             this->audioParam.audioCodecName.empty())
     {
+		 LOGE("FFmpegDecoder.open, no input or codec name");
         return -1;
     }
 
@@ -124,13 +128,15 @@ int FFmpegDecoder::open(const char *fileName)
         // The codecs are not opened. Only the file header (if present) is read
         if (av_open_input_file(&this->inputContext, fileName, NULL, 0, NULL))
         {
-            return -2;
+			 LOGE("FFmpegDecoder.open, fail to av_open_input_file");
+            return -1;
         }
 
         // Read packets of a media file to get stream information.
         if (av_find_stream_info(this->inputContext) < 0)
         {
-            return -3;
+			 LOGE("FFmpegDecoder.open, fail to av_find_stream_info");
+            return -1;
         }
 
         // find the video/audio stream
@@ -162,6 +168,7 @@ int FFmpegDecoder::open(const char *fileName)
         this->inputContext = avformat_alloc_context();
         if (!this->inputContext)
         {
+			 LOGE("FFmpegDecoder.open, failed to alloc context");
             return -1;
         }
     }
@@ -186,12 +193,14 @@ int FFmpegDecoder::open(const char *fileName)
             this->videoStream = av_new_stream(this->inputContext, 0);
             if (!this->videoStream)
             {
+				  LOGE("FFmpegDecoder.open, failed to new video stream!");
                 return -1;
             }
         }
 
         if (!videoCodec)
         {
+			 LOGE("FFmpegDecoder.open, find no video codec!");
             return -1;
         }
 
@@ -220,6 +229,7 @@ int FFmpegDecoder::open(const char *fileName)
         // open the video codec
         if (avcodec_open(videoCodecContext, videoCodec))
         {
+			 LOGE("FFmpegDecoder.open, find but failed to open video codec!");
             return -1;
         }
 
@@ -290,6 +300,7 @@ int FFmpegDecoder::open(const char *fileName)
     }
 
     this->opened = true;
+	LOGI("FFmpegDecoder.open, end!");
     return 0;
 }
 
@@ -299,6 +310,11 @@ void FFmpegDecoder::close()
     {
         return;
     }
+
+	if (this->hasInput) {
+		// close the input file
+		av_close_input_file(this->inputContext);
+	}
 
     this->currentPacketPts = 0;
     this->currentPacketDts = 0;
@@ -321,20 +337,42 @@ void FFmpegDecoder::close()
         this->audioPacketSize = 0;
     }
 
-    // close the input file
-    av_close_input_file(this->inputContext);
-
     this->inputContext = NULL;
     this->audioStream  = NULL;
     this->videoStream  = NULL;
-    this->currentPacket = AVPacket();
-
-    this->audioParam  = FFmpegAudioParam();
-    this->videoParam  = FFmpegVideoParam();
 
     this->opened      = false;
     this->decodeAudio = false;
     this->decodeVideo = false;
+}
+
+int FFmpegDecoder::decodeVideoFrame(const uint8_t *frameData, int dataSize)
+{
+	if (!this->opened)
+	{
+		LOGE("FFmpegDecoder::decodeVideoFrame, not open");
+		return -1;
+	}
+
+	if (!this->decodeVideo)
+	{
+		LOGE("FFmpegDecoder::decodeVideoFrame, cannot decode video");
+		return -2;
+	}
+
+	if (this->hasInput)
+	{
+		LOGE("FFmpegDecoder::decodeVideoFrame, input from file");
+		return -3;
+	}
+
+	// decode video frame
+	this->currentPacketPts = (double)this->currentPacket.pts * this->videoStream->time_base.num / this->videoStream->time_base.den;
+	this->currentPacketDts = (double)this->currentPacket.dts * this->videoStream->time_base.num / this->videoStream->time_base.den;
+	AVPacket pkt;
+	pkt.data = (uint8_t *)frameData;
+	pkt.size = dataSize;
+	return this->decodeVideoFrame(pkt);
 }
 
 int FFmpegDecoder::decodeFrame()
@@ -443,6 +481,34 @@ int FFmpegDecoder::decodeVideoFrame()
     }
 
     return 0;
+}
+
+int FFmpegDecoder::decodeVideoFrame(AVPacket &avpkt)
+{
+	int decodedSize, gotPicture = 0;
+	AVFrame videoFrame;
+
+	// set default value
+	avcodec_get_frame_defaults(&videoFrame);
+
+	// decode the video frame
+	decodedSize = avcodec_decode_video2(this->videoStream->codec, &videoFrame, &gotPicture, &avpkt);
+
+	this->videoFrameSize = 0;
+	if (gotPicture != 0)
+	{
+		// read the data to the buffer
+		avpicture_layout((AVPicture*)&videoFrame, this->videoParam.pixelFormat, this->videoParam.width, this->videoParam.height, this->videoFrameBuffer, this->videoBufferSize);
+		this->videoFrameSize = this->videoBufferSize;
+	}
+
+	if (decodedSize < 0)
+	{
+		LOGI("FFmpegDecoder.decodeVideoFrame, error!");
+		return -1;
+	}
+
+	return 0;
 }
 
 int FFmpegDecoder::decodeAudioFrame()

@@ -163,6 +163,8 @@ public:
     ///
     int decodeFrame();
 
+	int decodeVideoFrame(const uint8_t *frameData, int dataSize);
+
 
 private:
 
@@ -215,6 +217,7 @@ private:
     /// @brief  Decode a video frame from current packet, and store it in the video frame buffer
     ///
     int decodeVideoFrame();
+	int decodeVideoFrame(AVPacket &avpkt);
 
     ///
     /// @brief  Decode an audio frame from current packet, and store it in the audio frame buffer

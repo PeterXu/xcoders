@@ -145,18 +145,32 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size)
 		returnv_if_fail(pcoder->enc->inparam, -1);
 		returnv_if_fail(pcoder->enc->outparam, -1);
 
-		int size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)data, 
+		int ret_size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)data, 
 				pcoder->enc->inparam->pixelFormat,
 				pcoder->enc->inparam->width, 
-				pcoder->enc->inparam->height);
-		LOGI("encoded size: %d", size);
-		if (size > 0) {
+				pcoder->enc->inparam->height);		
+		if (ret_size > 0) {
 			pcoder->cb(XCODER_CB_ENCODED_FRAME, 
 				pcoder->enc->encoder->getVideoEncodedBuffer(),
-				size, 
+				ret_size, 
 				NULL);
+		}else {
+			LOGE("xcoder_code_frame, encoded ret: %d", ret_size);
 		}
 	}else if (pcoder->code_type == XCODER_DECODER) {
+		returnv_if_fail(pcoder->dec, -1);
+		returnv_if_fail(pcoder->dec->inparam, -1);
+		returnv_if_fail(pcoder->dec->outparam, -1);
+
+		int ret = pcoder->dec->decoder->decodeVideoFrame((const uint8_t *)data, size);
+		if (ret == 0) {
+			pcoder->cb(XCODER_CB_DECODED_FRAME, 
+				pcoder->dec->decoder->getVideoFrame(),
+				pcoder->dec->decoder->getVideoFrameSize(), 
+				NULL);
+		}else {
+			LOGE("xcoder_code_frame, decoded ret: %d", ret);
+		}
 	}
 
 	return 0;
