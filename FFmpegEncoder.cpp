@@ -32,13 +32,15 @@ void FFmpegEncoder::init()
 	this->outputContext = NULL;
 	this->videoStream = NULL;
 	this->audioStream = NULL;
+	
 	this->videoFrame = NULL;
 	this->videoBuffer = NULL;
 	this->videoBufferSize = 0;
+	
 	this->audioBuffer = NULL;
 	this->audioBufferSize = 0;
+
 	this->opened = false;
-	this->hasOutput = false;
 	this->encodeVideo = !this->videoParam.empty();
 	this->encodeAudio = !this->audioParam.empty();
 
@@ -65,7 +67,7 @@ const uint8_t *FFmpegEncoder::getVideoEncodedBuffer() const
 
 double FFmpegEncoder::getVideoTimeStamp() const
 {
-	if (!this->opened || !this->encodeVideo || !this->hasOutput)
+	if (!this->opened || !this->encodeVideo)
 	{
 		return 0;
 	}
@@ -95,12 +97,7 @@ int FFmpegEncoder::encodeVideoFrame(const uint8_t *frameData, PixelFormat format
 
 	if (!this->encodeVideo)
 	{
-		return -2;
-	}
-
-	if (this->hasOutput)
-	{
-		return -3;
+		return -1;
 	}
 
 	// set input video param
@@ -128,80 +125,10 @@ int FFmpegEncoder::encodeVideoFrame(const uint8_t *frameData)
 		return -1;
 	}
 
-	if (this->hasOutput)
-	{
-		return -1;
-	}
-
 	// encode the image frame
 	AVPicture picture;
 	avpicture_fill(&picture, (uint8_t *)frameData, this->videoParam.pixelFormat, this->videoParam.width, this->videoParam.height);
 	return this->encodeVideoData(&picture, this->videoParam);
-}
-
-int FFmpegEncoder::writeVideoFrame(const uint8_t *frameData, PixelFormat format, int width, int height)
-{
-	if (!this->opened)
-	{
-		return -1;
-	}
-
-	if (!this->encodeVideo)
-	{
-		return -1;
-	}
-
-	if (!this->hasOutput)
-	{
-		return -1;
-	}
-
-	// set input video param
-	FFmpegVideoParam inParam(width, height, format, 0, 0, "");
-
-	// encode the image
-	AVPicture picture;
-	avpicture_fill(&picture, (uint8_t *)frameData, inParam.pixelFormat, inParam.width, inParam.height);
-	int encodedSize = this->encodeVideoData(&picture, inParam);
-
-	// output the encoded image data
-	if (encodedSize > 0)
-	{
-		this->writeVideoData(this->videoBuffer, encodedSize);
-	}
-
-	return encodedSize;
-}
-
-int FFmpegEncoder::writeVideoFrame(const uint8_t *frameData)
-{
-	if (!this->opened)
-	{
-		return -1;
-	}
-
-	if (!this->encodeVideo)
-	{
-		return -1;
-	}
-
-	if (!this->hasOutput)
-	{
-		return -1;
-	}
-
-	// encode the image
-	AVPicture picture;
-	avpicture_fill(&picture, (uint8_t *)frameData, this->videoParam.pixelFormat, this->videoParam.width, this->videoParam.height);
-	int encodedSize = this->encodeVideoData(&picture, this->videoParam);
-
-	// output the encoded image data
-	if (encodedSize > 0)
-	{
-		this->writeVideoData(this->videoBuffer, encodedSize);
-	}
-
-	return encodedSize;
 }
 
 // private method 
@@ -252,34 +179,6 @@ int FFmpegEncoder::encodeVideoData(AVPicture *picture, FFmpegVideoParam &picPara
 }
 
 // private method
-int FFmpegEncoder::writeVideoData(uint8_t *packetData, int packetSize)
-{
-	AVPacket packet;
-	av_init_packet(&packet);
-
-	packet.pts= av_rescale_q(this->videoStream->codec->coded_frame->pts, this->videoStream->codec->time_base, this->videoStream->time_base);
-	if (this->videoStream->codec->coded_frame->key_frame)
-	{
-		packet.flags |= PKT_FLAG_KEY;
-	}
-	packet.stream_index = this->videoStream->index;
-	packet.data = packetData;
-	packet.size = packetSize;
-
-	// write the compressed frame in the media file
-	int success = av_write_frame(this->outputContext, &packet);
-
-	av_free_packet(&packet);
-
-	if (success < 0)
-	{
-		return -1;
-	}
-
-	return 0;
-}
-
-// private method
 int FFmpegEncoder::convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const AVCodecContext *dstContext)
 {
 	static SwsContext *img_convert_ctx = NULL;
@@ -314,7 +213,7 @@ const uint8_t *FFmpegEncoder::getAudioEncodedBuffer() const
 
 double FFmpegEncoder::getAudioTimeStamp() const
 {
-	if (!this->opened || !this->encodeAudio || !this->hasOutput)
+	if (!this->opened || !this->encodeAudio)
 	{
 		return 0;
 	}
@@ -372,50 +271,12 @@ int FFmpegEncoder::encodeAudioFrame(const uint8_t *frameData, int dataSize)
 		return -1;
 	}
 
-	if (this->hasOutput)
-	{
-		return -1;
-	}
-
 	if (this->audioStream->codec->frame_size <= 1 && dataSize < 1)
 	{
 		return -1;
 	}
 
 	return this->encodeAudioData((short*)frameData, dataSize/sizeof(short));
-}
-
-int FFmpegEncoder::writeAudioFrame(const uint8_t *frameData, int dataSize)
-{
-	if (!this->opened)
-	{
-		return -1;
-	}
-
-	if (!this->encodeAudio)
-	{
-		return -1;
-	}
-
-	if (!this->hasOutput)
-	{
-		return -1;
-	}
-
-	if (this->audioStream->codec->frame_size <= 1 && dataSize < 1)
-	{
-		return -1;
-	}
-
-	// encode the audio data
-	int encodedSize = this->encodeAudioData((short*)frameData, dataSize/sizeof(short));
-
-	// output the encoded audio data
-	if (encodedSize > 0)
-	{
-		this->writeAudioData(this->audioBuffer, encodedSize);
-	}
-	return encodedSize;
 }
 
 // private method
@@ -473,34 +334,6 @@ int FFmpegEncoder::encodeAudioData(short *frameData, int dataSize)
 	}
 }
 
-// private method
-int FFmpegEncoder::writeAudioData(uint8_t *packetData, int packetSize)
-{
-	AVPacket packet;
-	av_init_packet(&packet);
-
-	if (this->audioStream->codec && this->audioStream->codec->coded_frame->pts != (int)AV_NOPTS_VALUE)
-	{
-		packet.pts= av_rescale_q(this->audioStream->codec->coded_frame->pts, this->audioStream->codec->time_base, this->audioStream->time_base);
-	}
-	packet.flags |= PKT_FLAG_KEY;
-	packet.stream_index = this->audioStream->index;
-	packet.data = packetData;
-	packet.size = packetSize;
-
-	// write the compressed frame in the media file
-	int success = av_write_frame(this->outputContext, &packet);
-
-	av_free_packet(&packet);
-
-	if (success < 0)
-	{
-		return -1;
-	}
-
-	return 0;
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -517,25 +350,11 @@ int FFmpegEncoder::open(const char *fileName)
 		return -1;
 	}
 
-	this->hasOutput = (fileName != NULL) && (fileName[0] != 0);
-	if (!this->hasOutput && this->videoParam.videoCodecName.empty() && 
+	if (this->videoParam.videoCodecName.empty() && 
 		this->audioParam.audioCodecName.empty())
 	{
 		LOGE("FFmpegEncoder.open, no output or codec name");
 		return -1;
-	}
-
-	// initialize the output format
-	AVOutputFormat *outputFormat = NULL;
-	if (this->hasOutput)
-	{
-		// find suitable output format according to the postfix of the filename
-		outputFormat = guess_format(NULL, fileName, NULL);
-		if(!outputFormat)
-		{
-			LOGE("FFmpegEncoder.open, failed to guess format!");
-			return -1;
-		}
 	}
 
 	// allocate the output media context
@@ -543,38 +362,24 @@ int FFmpegEncoder::open(const char *fileName)
 	if (!this->outputContext)
 	{
 		LOGE("FFmpegEncoder.open, failed to alloc context!");
-		return -2;
-	}
-
-	if (this->hasOutput)
-	{
-		this->outputContext->oformat = outputFormat;
-		snprintf(this->outputContext->filename, sizeof(this->outputContext->filename), "%s", fileName);
+		return -1;
 	}
 
 	// video related initialization if necessary
 	if (this->encodeVideo)
 	{
 		// validate the video codec
-		if ((!outputFormat || outputFormat->video_codec == CODEC_ID_NONE) && 
-			this->videoParam.videoCodecName.empty())
+		if (this->videoParam.videoCodecName.empty())
 		{
-			LOGE("FFmpegEncoder.open, no outputformat or no video codec name!");
+			LOGE("FFmpegEncoder.open, no video codec name!");
 			return -1;
 		}
 
 		// find the video encoder
 		AVCodec *videoCodec = NULL;
-		if (!this->videoParam.videoCodecName.empty())
-		{
-			// use the codec name preferentially if it is specified in the input param
-			videoCodec = avcodec_find_encoder_by_name(this->videoParam.videoCodecName.c_str());
-		}
-		else
-		{
-			// otherwise, use the codec guessed from the filename
-			videoCodec = avcodec_find_encoder(outputFormat->video_codec);
-		}
+
+		// use the codec name preferentially if it is specified in the input param
+		videoCodec = avcodec_find_encoder_by_name(this->videoParam.videoCodecName.c_str());
 
 		if (!videoCodec)
 		{
@@ -617,17 +422,6 @@ int FFmpegEncoder::open(const char *fileName)
 				videoCodecContext->pix_fmt = *p;
 		}
 
-		// some formats want stream headers to be separate
-		if (outputFormat && outputFormat->video_codec != CODEC_ID_NONE)
-		{
-			if (   !strcmp(this->outputContext->oformat->name, "mp4")
-				|| !strcmp(this->outputContext->oformat->name, "mov") 
-				|| !strcmp(this->outputContext->oformat->name, "3gp") )
-			{
-				videoCodecContext->flags |= CODEC_FLAG_GLOBAL_HEADER;
-			}
-		}
-
 		// open the video codec
 		if (avcodec_open(videoCodecContext, videoCodec) < 0)
 		{
@@ -658,7 +452,7 @@ int FFmpegEncoder::open(const char *fileName)
 	if (this->encodeAudio)
 	{
 		// validate the audio codec
-		if ((!outputFormat || outputFormat->audio_codec == CODEC_ID_NONE) && this->audioParam.audioCodecName.empty())
+		if (this->audioParam.audioCodecName.empty())
 		{
 			LOGE("FFmpegEncoder.open, no outputformat or no audio codec name!");
 			return -1;
@@ -666,16 +460,9 @@ int FFmpegEncoder::open(const char *fileName)
 
 		// find the audio encoder
 		AVCodec *audioCodec = NULL;
-		if (!this->audioParam.audioCodecName.empty())
-		{
-			// use the codec name preferentially if it is specified in the input param
-			audioCodec = avcodec_find_encoder_by_name(this->audioParam.audioCodecName.c_str());
-		}
-		else
-		{
-			// otherwise, use the codec guessed from the filename
-			audioCodec = avcodec_find_encoder(outputFormat->audio_codec);
-		}
+
+		// use the codec name preferentially if it is specified in the input param
+		audioCodec = avcodec_find_encoder_by_name(this->audioParam.audioCodecName.c_str());
 
 		if (!audioCodec)
 		{
@@ -712,35 +499,6 @@ int FFmpegEncoder::open(const char *fileName)
 		this->audioBuffer     = (uint8_t*)(av_malloc(this->audioBufferSize));
 	}
 
-	// set the output parameters (must be done even if no parameters).
-	if (this->hasOutput)
-	{
-		if (av_set_parameters(this->outputContext, NULL) < 0)
-		{
-			LOGE("FFmpegEncoder.open, failed to set parameters for file output!");
-			return -1;
-		}
-	}
-
-	//dump_format(this->outputContext, 0, this->fileName.c_str(), 1);
-
-	// open the output file, if needed
-	if (this->hasOutput)
-	{
-		if (url_fopen(&this->outputContext->pb, fileName, URL_WRONLY) < 0)
-		{
-			LOGE("FFmpegEncoder.open, failed to url_fopen!");
-			return -1;
-		}
-
-		// write the stream header, if any
-		if (av_write_header(this->outputContext))
-		{
-			LOGE("FFmpegEncoder.open, failed to write av header!");
-			return -1;
-		}
-	}
-
 	this->opened = true;
 	LOGI("FFmpegEncoder.open, end!");
 
@@ -752,13 +510,6 @@ void FFmpegEncoder::close()
 	if (!this->opened)
 	{
 		return;
-	}
-
-	if (this->hasOutput)
-	{
-		// write the trailer, and close the output file
-		av_write_trailer(this->outputContext);
-		url_fclose(this->outputContext->pb);
 	}
 
 	if (this->encodeVideo)
@@ -789,6 +540,7 @@ void FFmpegEncoder::close()
 	av_freep(&this->outputContext);
 
 	this->opened = false;
-	this->hasOutput = false;
+	this->encodeVideo = false;
+	this->encodeAudio = false;
 }
 

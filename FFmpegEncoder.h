@@ -189,18 +189,6 @@ public:
 	int encodeVideoFrame(const uint8_t *frameData, PixelFormat format, int width, int height);
 
 	///
-	/// @brief  Encode a specific video frame and write encoded data to the output file.
-	///
-	/// Use this method only when this is output, otherwise use encodeVideoFrame() instead.
-	///
-	/// @param  [in] frameData The image data of the frame to be encoded.
-	///
-	/// @return A non-negative int representing the size of the encoded buffer.
-	///
-	int writeVideoFrame(const uint8_t *frameData);
-	int writeVideoFrame(const uint8_t *frameData, PixelFormat format, int width, int height);
-
-	///
 	/// @brief  Encode one audio frame (just encode, won't write encoded data to output file).
 	///
 	/// The encoded frame data can be retrieved by calling getAudioEncodedBuffer().
@@ -213,18 +201,6 @@ public:
 	///
 	int encodeAudioFrame(const uint8_t *frameData, int dataSize = 0);
 
-	///
-	/// @brief  Encode a specific audio frame and write encoded data to the output file.
-	///
-	/// Use this method only when this is output, otherwise use encodeAudioFrame() instead.
-	///
-	/// @param  [in]     frameData The audio data of the frame to be encoded.
-	/// @param  [in/opt] dataSize  The size of audio frame data, required for PCM related codecs.
-	///
-	/// @return A non-negative int representing the size of the encoded buffer.
-	///
-	int writeAudioFrame(const uint8_t *frameData, int dataSize = 0);
-
 private:
 	//////////////////////////////////////////////////////////////////////////
 	//
@@ -234,16 +210,19 @@ private:
 
 	bool encodeVideo;   ///< Whether video encoding is needed
 	bool encodeAudio;   ///< Whether audio encoding is needed
-	bool hasOutput;     ///< Whether there is a output file for encoding
 	bool opened;        ///< Whether the FFmpegEncoder is opened yet
+
 	FFmpegVideoParam videoParam;    ///< The video parameters of the video to be encoded
 	FFmpegAudioParam audioParam;    ///< The audio parameters of the audio to be encoded
+
 	AVFormatContext *outputContext; ///< The output format context
 	AVStream *videoStream;          ///< The video output stream
 	AVStream *audioStream;          ///< The audio output stream
+
 	AVPicture *videoFrame;          ///< The temporary video frame for pixel format conversion
 	uint8_t *videoBuffer;       ///< The video output buffer
 	int     videoBufferSize;    ///< The size of video output buffer
+
 	uint8_t *audioBuffer;       ///< The audio output buffer
 	int     audioBufferSize;    ///< The size of audio output buffer
 
@@ -267,14 +246,6 @@ private:
 	int encodeVideoData(AVPicture *picture, FFmpegVideoParam &inParam);
 
 	///
-	/// @brief  Write the encoded video frame packet data to the output
-	///
-	/// @param  [in] packetData  The packet data of the encoded video frame
-	/// @param  [in] packetSize  The size of the encoded video frame data
-	///
-	int writeVideoData(uint8_t *packetData, int packetSize);
-
-	///
 	/// @brief  Convert the pixel format of the input image
 	///
 	/// @param  [in]  srcParam    The parameters of the source image picture
@@ -295,14 +266,6 @@ private:
 	/// @return A non-negative int represents the size of the encoded data
 	///
 	int encodeAudioData(short *frameData, int dataSize);
-
-	///
-	/// @brief  Write the encoded audio frame packet data to the output
-	///
-	/// @param  [in] packetData  The packet data of the encoded audio frame
-	/// @param  [in] packetSize  The size of the encoded audio frame data
-	///
-	int writeAudioData(uint8_t *packetData, int packetSize);
 };
 
 #endif

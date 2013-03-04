@@ -56,6 +56,11 @@ int xcoder_set_input(xcoder_t coder, int width, int height, int format, int fec)
 		pcoder->enc = new xcoder_encoder_t;
 		pcoder->enc->inparam = new FFmpegVideoParam(width, height, PIX_FMT_YUV420P, 0, 30, "libx264");
 		break;
+	case XCODER_FMT_RGBA:
+		pcoder->code_type = XCODER_ENCODER;
+		pcoder->enc = new xcoder_encoder_t;
+		pcoder->enc->inparam = new FFmpegVideoParam(width, height, PIX_FMT_RGBA, 0, 30, "libx264");
+		break;
 	case XCODER_FMT_AVC:  // for decoder
 		pcoder->code_type = XCODER_DECODER;
 		pcoder->dec = new xcoder_decoder_t;
@@ -145,31 +150,31 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size)
 		returnv_if_fail(pcoder->enc->inparam, -1);
 		returnv_if_fail(pcoder->enc->outparam, -1);
 
-		int ret_size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)data, 
+		int out_size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)data, 
 				pcoder->enc->inparam->pixelFormat,
 				pcoder->enc->inparam->width, 
 				pcoder->enc->inparam->height);		
-		if (ret_size > 0) {
+		if (out_size > 0) {
 			pcoder->cb(XCODER_CB_ENCODED_FRAME, 
 				pcoder->enc->encoder->getVideoEncodedBuffer(),
-				ret_size, 
+				out_size, 
 				NULL);
 		}else {
-			LOGE("xcoder_code_frame, encoded ret: %d", ret_size);
+			LOGE("xcoder_code_frame, encoded ret: %d", out_size);
 		}
 	}else if (pcoder->code_type == XCODER_DECODER) {
 		returnv_if_fail(pcoder->dec, -1);
 		returnv_if_fail(pcoder->dec->inparam, -1);
 		returnv_if_fail(pcoder->dec->outparam, -1);
 
-		int ret = pcoder->dec->decoder->decodeVideoFrame((const uint8_t *)data, size);
-		if (ret == 0) {
+		int used_size = pcoder->dec->decoder->decodeVideoFrame((const uint8_t *)data, size);
+		if (used_size > 0) {
 			pcoder->cb(XCODER_CB_DECODED_FRAME, 
 				pcoder->dec->decoder->getVideoFrame(),
 				pcoder->dec->decoder->getVideoFrameSize(), 
 				NULL);
 		}else {
-			LOGE("xcoder_code_frame, decoded ret: %d", ret);
+			LOGE("xcoder_code_frame, decoded ret: %d", used_size);
 		}
 	}
 

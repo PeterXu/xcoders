@@ -235,6 +235,7 @@ void FFmpegDecoder::close()
 	{
 		avcodec_close(this->videoStream->codec);
 		av_freep(&this->videoFrameBuffer);
+		av_freep(&this->videoStream);
 		this->videoFrameSize = 0;
 		this->videoBufferSize = 0;
 	}
@@ -243,17 +244,12 @@ void FFmpegDecoder::close()
 	{
 		avcodec_close(this->audioStream->codec);
 		av_freep(&this->audioFrameBuffer);
+		av_freep(&this->audioStream);
 		this->audioFrameSize  = 0;
 		this->audioBufferSize = 0;
 	}
 
-	if (this->inputContext) {
-		av_free(this->inputContext);
-		this->inputContext = NULL;
-	}
-
-	this->audioStream  = NULL;
-	this->videoStream  = NULL;
+	av_freep(&this->inputContext);
 
 	this->opened      = false;
 	this->decodeAudio = false;
