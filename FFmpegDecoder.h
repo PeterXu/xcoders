@@ -139,7 +139,7 @@ public:
     ///
     /// @param  [in] fileName   The name of the input media file (including the extension).
     ///
-    int open(const char *fileName);
+    int open(const char *fileName = NULL);
 
     ///
     /// @brief  Close the input file, codecs, and release the memories.

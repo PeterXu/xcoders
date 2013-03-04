@@ -7,7 +7,7 @@
 #ifdef XCODERS_EXPORTS
 #define XCODERS_API extern "C" __declspec(dllexport)
 #else
-#define XCODERS_API __declspec(dllimport)
+#define XCODERS_API extern "C" __declspec(dllimport)
 #endif
 
 

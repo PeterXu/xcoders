@@ -479,7 +479,7 @@ int FFmpegEncoder::writeAudioData(uint8_t *packetData, int packetSize)
     AVPacket packet;
     av_init_packet(&packet);
 
-    if (this->audioStream->codec && this->audioStream->codec->coded_frame->pts != AV_NOPTS_VALUE)
+    if (this->audioStream->codec && this->audioStream->codec->coded_frame->pts != (int)AV_NOPTS_VALUE)
     {
         packet.pts= av_rescale_q(this->audioStream->codec->coded_frame->pts, this->audioStream->codec->time_base, this->audioStream->time_base);
     }
@@ -539,7 +539,7 @@ int FFmpegEncoder::open(const char *fileName)
     }
 
     // allocate the output media context
-    this->outputContext = av_alloc_format_context();
+    this->outputContext = avformat_alloc_context();
     if (!this->outputContext)
     {
         LOGE("FFmpegEncoder.open, failed to alloc context!");

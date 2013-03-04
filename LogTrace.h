@@ -11,10 +11,10 @@
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, IVYTAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, IVYTAG, __VA_ARGS__))
 #else
-#define LOGD(...)
-#define LOGI(...)
-#define LOGW(...)
-#define LOGE(...)
+#define LOGD(...) {fprintf(stdout, __VA_ARGS__); fprintf(stdout, "\n");}
+#define LOGI(...) {fprintf(stdout, __VA_ARGS__); fprintf(stdout, "\n");}
+#define LOGW(...) {fprintf(stdout, __VA_ARGS__); fprintf(stdout, "\n");}
+#define LOGE(...) {fprintf(stdout, __VA_ARGS__); fprintf(stdout, "\n");}
 #endif
 
 #endif

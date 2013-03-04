@@ -159,7 +159,7 @@ int FFmpegDecoder::open(const char *fileName)
     else
     {
         // allocate the output media context
-        this->inputContext = av_alloc_format_context();
+        this->inputContext = avformat_alloc_context();
         if (!this->inputContext)
         {
             return -1;
@@ -423,7 +423,7 @@ int FFmpegDecoder::decodeVideoFrame()
     avcodec_get_frame_defaults(&videoFrame);
 
     // decode the video frame
-    decodedSize = avcodec_decode_video(this->videoStream->codec, &videoFrame, &gotPicture, this->currentPacket.data, this->currentPacket.size);
+    decodedSize = avcodec_decode_video2(this->videoStream->codec, &videoFrame, &gotPicture, &(this->currentPacket));
 
     this->videoFrameSize = 0;
     if (gotPicture != 0)
@@ -450,7 +450,10 @@ int FFmpegDecoder::decodeAudioFrame()
     int decodedSize, outputFrameSize = this->audioBufferSize;
 
     // decode one audio frame
-    decodedSize = avcodec_decode_audio2(this->audioStream->codec, (int16_t *)this->audioFrameBuffer, &outputFrameSize, this->audioPacketData, this->audioPacketSize);
+    AVPacket pkt;
+    pkt.data = this->audioPacketData; 
+    pkt.size = this->audioPacketSize;
+    decodedSize = avcodec_decode_audio3(this->audioStream->codec, (int16_t *)this->audioFrameBuffer, &outputFrameSize, &pkt);
 
     this->audioFrameSize = outputFrameSize;
 
