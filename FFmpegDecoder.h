@@ -139,7 +139,7 @@ public:
 	///
 	/// @param  [in] fileName   The name of the input media file (including the extension).
 	///
-	int open(const char *fileName = NULL);
+	int open();
 
 	///
 	/// @brief  Close the input file, codecs, and release the memories.
@@ -161,9 +161,8 @@ public:
 	/// @retval 1  Audio frame
 	/// @retval -1 Error occurred or end of file
 	///
-	int decodeFrame();
-
-	int decodeVideoFrame(const uint8_t *frameData, int dataSize);
+	int decodeVideoFrame(const uint8_t *frameData, int dataSize, int64_t pts=0, int64_t dts=0);
+	int decodeAudioFrame(const uint8_t *frameData, int dataSize, int64_t pts=0, int64_t dts=0);
 
 
 private:
@@ -176,22 +175,23 @@ private:
 
 	bool decodeVideo;           ///< Whether video decoding is needed
 	bool decodeAudio;           ///< Whether audio decoding is needed
-	bool hasInput;              ///< Whether there is a input file for decoding
 	bool opened;                ///< Whether the FFmpegDecoder is opened yet
+
 	FFmpegVideoParam videoParam;        ///< The video parameters of the video to be decoded
 	FFmpegAudioParam audioParam;        ///< The audio parameters of the audio to be decoded
+
 	AVFormatContext *inputContext;      ///< The input format context
 	AVStream *videoStream;              ///< The video input stream
 	AVStream *audioStream;              ///< The audio input stream
-	AVPacket currentPacket;		///< the packet read from the input file currently
+
 	uint8_t *videoFrameBuffer;  ///< The buffer storing one output video frame data
 	int      videoFrameSize;    ///< The size of the output video frame
 	int      videoBufferSize;   ///< The total size of the video output buffer
+
 	uint8_t *audioFrameBuffer;  ///< The buffer storing one output audio frame data
 	int      audioFrameSize;    ///< The size of the output audio frame
 	int      audioBufferSize;   ///< The total size of the audio output buffer
-	uint8_t *audioPacketData;   ///< The remaining audio packet data to be decoded
-	int      audioPacketSize;   ///< The size of the remaining audio packet data to be decoded
+
 	double currentPacketPts;	///< The presentation time stamp of the current packet
 	double currentPacketDts;	///< The decompression time stamp of the current packet
 
@@ -207,22 +207,14 @@ private:
 	void init();
 
 	///
-	/// @brief  Read a packet from the input file
-	///
-	/// @return Negative int on error, or zero on success
-	///
-	int readFrame();
-
-	///
 	/// @brief  Decode a video frame from current packet, and store it in the video frame buffer
 	///
-	int decodeVideoFrame();
 	int decodeVideoFrame(AVPacket &avpkt);
 
 	///
 	/// @brief  Decode an audio frame from current packet, and store it in the audio frame buffer
 	///
-	int decodeAudioFrame();
+	int decodeAudioFrame(AVPacket &avpkt);
 };
 
 #endif
