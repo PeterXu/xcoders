@@ -19,41 +19,41 @@
 class FFMPEG_EXPORT FFmpegAudioParam
 {
 public:
-    ///
-    /// @brief  Constructor for initializing an object of FFmpegAudioParam
-    ///
-    /// @param  [in] sampleRate     The sample rate of the audio, must be greater than 0
-    /// @param  [in] channels       The number of channels in the audio, must be greater than 0
-    /// @param  [in] bitRate        The target bit rate of the target audio stream, must be greater than 0
-    /// @param  [in] audioCodecName The name of the audio codec which is going to be used in encoding/decoding
-    ///
-    FFmpegAudioParam(int sampleRate, int channels, int bitRate, std::string audioCodecName = "");
+	///
+	/// @brief  Constructor for initializing an object of FFmpegAudioParam
+	///
+	/// @param  [in] sampleRate     The sample rate of the audio, must be greater than 0
+	/// @param  [in] channels       The number of channels in the audio, must be greater than 0
+	/// @param  [in] bitRate        The target bit rate of the target audio stream, must be greater than 0
+	/// @param  [in] audioCodecName The name of the audio codec which is going to be used in encoding/decoding
+	///
+	FFmpegAudioParam(int sampleRate, int channels, int bitRate, std::string audioCodecName = "");
 
-    ///
-    /// @brief  Constructor for initializing an empty FFmpegAudioParam object
-    ///
-    FFmpegAudioParam();
+	///
+	/// @brief  Constructor for initializing an empty FFmpegAudioParam object
+	///
+	FFmpegAudioParam();
 
-    ///
-    /// @brief  Destructor
-    ///
-    virtual ~FFmpegAudioParam();
+	///
+	/// @brief  Destructor
+	///
+	virtual ~FFmpegAudioParam();
 
-    ///
-    ///	@brief  Judge whether a FFmpegAudioParam object is empty
-    ///	
-    bool empty();
+	///
+	///	@brief  Judge whether a FFmpegAudioParam object is empty
+	///	
+	bool empty();
 
-    ///
-    ///	@brief  Judge whether a FFmpegAudioParam object's parameters are right
-    ///	
-    bool isValid();
+	///
+	///	@brief  Judge whether a FFmpegAudioParam object's parameters are right
+	///	
+	bool isValid();
 
 public:
-    int sampleRate;             ///< The sample rate of the audio
-    int channels;               ///< The number of audio channels
-    int bitRate;                ///< The bit rate of the audio
-    std::string audioCodecName;	///< The name of the audio codec
+	int sampleRate;             ///< The sample rate of the audio
+	int channels;               ///< The number of audio channels
+	int bitRate;                ///< The bit rate of the audio
+	std::string audioCodecName;	///< The name of the audio codec
 };
 
 #endif
