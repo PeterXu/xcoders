@@ -16,26 +16,33 @@
 
 
 /**
- * The handle for coder	定义编/解码器（codec）的句柄类型
+ * The handle for coder	定义编/解码器（codec）的句柄
  */
 typedef void* xcoder_t;
 
+/**
+ * The type for coder 编/解码器
+ */
+enum xcoder_type_t {
+	XCODER_ENCODER,
+	XCODER_DECODER,
+};
 
 /**
  * Create one coder and return its handle	创建一个编/解码器（codec）并返回其句柄
  *
  * @param pcoder	[in] The address of one null handle, [out] the handle of a new coder
  *					[in] 输入空句柄的地址，[out] 返回创建的codec句柄
+ * @param ctype		[in] coder type, @refer xcoder_type_t			设置编/解码器
  * @return 		Return 0 if success, or non-0 if a error occurs		成功返回0, 否则非0值
  */
-XCODERS_API int xcoder_create(xcoder_t *ppcoder);
+XCODERS_API int xcoder_create(xcoder_t *ppcoder, int ctype);
 
 /** 
- * Format types	支持的输入数据格式类型
+ * Format types	支持的输入数据颜色空间
  */
-enum xcoder_format_t {
+enum xcoder_colorspace_t {
     XCODER_FMT_I420,
-    XCODER_FMT_AVC,
     XCODER_FMT_RGBA,
 };
 
@@ -47,30 +54,23 @@ enum xcoder_fec_t {
     XCODER_FEC_DEFAULT,
 };
 
-/**
- * Set option for xcoder input	设置codec的输入参数
- *
- * @param coder 	[in] The coder handle									编/解码器（codec）句柄
- * @param width 	[in] The width of input frame							设置输入视频数据的宽
- * @param height 	[in] The height of input frame							设置输入视频数据的高
- * @param format 	[in] The format of input frame, @refer xcoder_format_t	设置输入视频数据的格式(值类型为xcoder_format_t)
- * @param fec 		[in] fec method, @refer xcoder_fec_t					设置fec格式
- * @return 		Return 0 if success, or non-0 if a error occurs				成功返回0，否则非0值
- */
-XCODERS_API int xcoder_set_input(xcoder_t coder, int width, int height, int format, int fec);
+typedef struct xcoder_format_t {
+	int width;
+	int height;
+	int colorspace;	/* @refer xcoder_colorspace_t */
+}xcoder_format_t;
 
 /**
  * Set option for coder output	设置codec的输出参数
  *
  * @param coder 	[in] The coder handle								编/解码器（codec）句柄
- * @param width 	[in] the width of encoded/decoded frame				设置输出视频数据的宽
- * @param height 	[in] the height of encoded/decoded frame			设置输出视频数据的高
- * @param format 	[in] the format of encoded/decoded frame			设置输出视频数据的格式(值类型为xcoder_format_t)
- * @param framerate [in] the framerate of encoded/decoded frames(fps)	设置输出视频数据的fps
+ * @param format 	[in] the format of encoded/decoded frame			设置输出视频数据的格式(类型为xcoder_format_t)
+ * @param fps		[in] the fps of encoded/decoded frames				设置输出视频数据的fps
  * @param bitrate 	[in] the bitrate of encoded/decoded frames(bit/s)	设置输出视频数据的bitrate（bit/s）
+ * @param fec 		[in] whether to use fec, @refer xcoder_fec_t		设置fec(xcoder_fec_t)
  * @return 		Return 0 if success, or non-0 if a error occurs			成功返回0，否则非0值
  */
-XCODERS_API int xcoder_set_output(xcoder_t coder, int width, int height, int format, int framerate, int bitrate);
+XCODERS_API int xcoder_set_options(xcoder_t coder, xcoder_format_t format, int fps, int bitrate, int fec);
 
 /** 
  * Callback types	回调类型
@@ -101,15 +101,17 @@ typedef void (*xcoder_callback_t) (int cbtype, const unsigned char *data, int si
  */
 XCODERS_API int xcoder_open(xcoder_t coder, xcoder_callback_t cb, void *priv);
 
+
 /**
  * Encode/Decode one frame	编/解码一帧数据
  *
- * @param coder 	[in] The coder handle							编/解码器（codec）句柄
- * @param data 		[in] The input buffer							输出数据存放的buffer
- * @param size 		[in] The size of input frame					输出数据的大小
+ * @param coder 	[in] The coder handle									编/解码器（codec）句柄
+ * @param data 		[in] The input buffer									输入数据存放的buffer
+ * @param size 		[in] The size of input frame							输入数据的大小
+ * @param format 	[in] The format of input frame, @refer xcoder_format_t	输入数据的格式(值类型为xcoder_format_t)
  * @return 		Return 0 if success, or non-0 if a error occurs		成功返回0，否则非0值
  */
-XCODERS_API int xcoder_code_frame(xcoder_t xcoder, unsigned char *data, int size);
+XCODERS_API int xcoder_code_frame(xcoder_t xcoder, unsigned char *data, int size, xcoder_format_t format);
 
 /**
  * Close one coder	关闭编/解码器（codec）

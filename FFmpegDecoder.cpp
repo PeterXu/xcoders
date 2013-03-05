@@ -135,18 +135,17 @@ int FFmpegDecoder::open()
 
 		// use the codec name preferentially if it is specified in the input param
 		videoCodec = avcodec_find_decoder_by_name(this->videoParam.videoCodecName.c_str());
+		if (!videoCodec)
+		{
+			LOGE("FFmpegDecoder.open, find no video codec!");
+			return -1;
+		}
 
 		// add the video stream with stream id 0
 		this->videoStream = av_new_stream(this->inputContext, 0);
 		if (!this->videoStream)
 		{
 			LOGE("FFmpegDecoder.open, failed to new video stream!");
-			return -1;
-		}
-
-		if (!videoCodec)
-		{
-			LOGE("FFmpegDecoder.open, find no video codec!");
 			return -1;
 		}
 
