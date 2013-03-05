@@ -4,8 +4,8 @@ IVYFFMPEG_ROOT=../IvyVideo/trunk/ivyffmpeg
 
 CC = gcc
 CXX = g++
-INCLUDES = -I${IVYFFMPEG_ROOT}/ffmpeg/
-LIBS = -L${IVYFFMPEG_ROOT}/ffmpeg/build/win32/lib -lavcodec -lavutil -lavformat -lswscale 
+INCLUDES = -I${IVYFFMPEG_ROOT}/ffmpeg/ -Ilibyuv/include
+LIBS = -L${IVYFFMPEG_ROOT}/ffmpeg/build/win32/lib -lavcodec -lavutil -lavformat -lswscale -Llibyuv -lyuv
 CFLAGS = -Wall -Werror -DXCODERS_EXPORTS
 LINKFLAGS = -shared -Wl,--output-def,xcoders.def,--out-implib,xcoders.lib
 

@@ -185,9 +185,9 @@ public:
 	///
 	/// @return A non-negative int representing the size of the encoded buffer.
 	///
-	int encodeVideoFrame(const uint8_t *frameData);
 	int encodeVideoFrame(const uint8_t *frameData, PixelFormat format, int width, int height);
 
+	int convertPixFmt(const uint8_t *src, int srclen, uint8_t *dst, int dstlen, int width, int height, int srcfmt, int dstfmt);
 	///
 	/// @brief  Encode one audio frame (just encode, won't write encoded data to output file).
 	///
@@ -255,7 +255,7 @@ private:
 	///
 	/// @return 0 when conversion is successful, otherwise a negative int
 	///
-	int convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const AVCodecContext *dstContext);
+	int convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const FFmpegVideoParam *dstParam);
 
 	///
 	/// @brief  Encode an audio frame to the internal encoded data buffer

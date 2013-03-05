@@ -113,24 +113,6 @@ int FFmpegEncoder::encodeVideoFrame(const uint8_t *frameData, PixelFormat format
 	return this->encodeVideoData(&picture, inParam);
 }
 
-int FFmpegEncoder::encodeVideoFrame(const uint8_t *frameData)
-{
-	if (!this->opened)
-	{
-		return -1;
-	}
-
-	if (!this->encodeVideo)
-	{
-		return -1;
-	}
-
-	// encode the image frame
-	AVPicture picture;
-	avpicture_fill(&picture, (uint8_t *)frameData, this->videoParam.pixelFormat, this->videoParam.width, this->videoParam.height);
-	return this->encodeVideoData(&picture, this->videoParam);
-}
-
 // private method 
 int FFmpegEncoder::encodeVideoData(AVPicture *picture, FFmpegVideoParam &picParam)
 {
@@ -143,17 +125,12 @@ int FFmpegEncoder::encodeVideoData(AVPicture *picture, FFmpegVideoParam &picPara
 	}
 
 	// convert the pixel format if needed
-	if (picParam.pixelFormat != videoCodecContext->pix_fmt)
-		//|| picParam.width != videoCodecContext->width
-		//|| picParam.height != videoCodecContext->height)
+	if (picParam.pixelFormat != videoCodecContext->pix_fmt ||
+		picParam.width != videoCodecContext->width ||
+		picParam.height != videoCodecContext->height)
 	{
-		if (this->convertPixFmt(picture, this->videoFrame, &picParam, videoCodecContext) != 0)
-		{
-			LOGE("FFmpegEncoder::encodeVideoData, convertPixFmt error");
-			return -1;
-		}
-		// fill the frame
-		*(AVPicture *)frame = *this->videoFrame;
+		LOGE("FFmpegEncoder::encodeVideoData, VideoParam match error");
+		return -1;
 	}
 	else
 	{
@@ -178,8 +155,42 @@ int FFmpegEncoder::encodeVideoData(AVPicture *picture, FFmpegVideoParam &picPara
 	}
 }
 
+int FFmpegEncoder::convertPixFmt(const uint8_t *src, int srclen, uint8_t *dst, int dstlen,
+								 int width, int height, int srcfmt, int dstfmt)
+{
+	if (!src || !dst) {
+		return -1;
+	}
+
+	// set input video param
+	FFmpegVideoParam inParam(width, height, (PixelFormat)srcfmt, 0, 0, "");
+
+	// src frame
+	AVPicture srcPic;
+	if(avpicture_fill(&srcPic, (uint8_t *)src, inParam.pixelFormat, inParam.width, inParam.height) == -1) 
+	{
+		return -1;
+	}
+
+	// set input video param
+	FFmpegVideoParam outParam(width, height, (PixelFormat)dstfmt, 0, 0, "");
+
+	AVPicture dstPic;
+	if(avpicture_alloc(&dstPic, outParam.pixelFormat, outParam.width, outParam.height) == -1) 
+	{
+		return -1;
+	}
+
+	if (convertPixFmt(&srcPic, &dstPic, &inParam, &outParam) != 0)
+	{
+		return -1;
+	}
+
+	return avpicture_layout(&dstPic, outParam.pixelFormat, outParam.width, outParam.height, dst, dstlen);
+}
+
 // private method
-int FFmpegEncoder::convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const AVCodecContext *dstContext)
+int FFmpegEncoder::convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const FFmpegVideoParam *dstParam)
 {
 	static SwsContext *img_convert_ctx = NULL;
 
@@ -187,7 +198,7 @@ int FFmpegEncoder::convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFm
 	{
 		img_convert_ctx = sws_getContext(
 			srcParam->width, srcParam->height, srcParam->pixelFormat,
-			dstContext->width, dstContext->height, dstContext->pix_fmt,
+			dstParam->width, dstParam->height, dstParam->pixelFormat,
 			SWS_BICUBIC, NULL, NULL, NULL);
 	}
 
