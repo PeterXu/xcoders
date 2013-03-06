@@ -216,6 +216,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\utils.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\xcoders.cpp"
 				>
 			</File>
@@ -231,6 +235,10 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\utils.h"
 				>
 			</File>
 			<File

@@ -4,8 +4,8 @@ IVYFFMPEG_ROOT=../IvyVideo/trunk/ivyffmpeg
 
 CC = gcc
 CXX = g++
-INCLUDES = -I${IVYFFMPEG_ROOT}/ffmpeg/ -Ilibyuv/include
-LIBS = -L${IVYFFMPEG_ROOT}/ffmpeg/build/win32/lib -lavcodec -lavutil -lavformat -lswscale -Llibyuv -lyuv
+INCLUDES = -I${IVYFFMPEG_ROOT}/ffmpeg/
+LIBS = -L${IVYFFMPEG_ROOT}/ffmpeg/build/win32/lib -lavcodec -lavutil -lavformat -lswscale
 CFLAGS = -Wall -Werror -DXCODERS_EXPORTS
 LINKFLAGS = -shared -Wl,--output-def,xcoders.def,--out-implib,xcoders.lib
 
@@ -17,6 +17,7 @@ CPP_SOURCES = LogTrace.cpp \
 	FFmpegEncoder.cpp  \
 	FFmpegVideoParam.cpp \
 	FFmpegAudioParam.cpp \
+	utils.cpp \
 	xcoders.cpp
 CPP_OBJS = $(patsubst %.cpp, %.o, $(CPP_SOURCES))
 

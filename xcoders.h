@@ -43,6 +43,9 @@ XCODERS_API int xcoder_create(xcoder_t *ppcoder, int ctype);
  */
 enum xcoder_colorspace_t {
     XCODER_FMT_I420,
+    XCODER_FMT_RGB24,
+    XCODER_FMT_BGR24,
+    XCODER_FMT_NV21,
     XCODER_FMT_RGBA,
 };
 

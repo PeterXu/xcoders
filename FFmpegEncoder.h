@@ -187,7 +187,9 @@ public:
 	///
 	int encodeVideoFrame(const uint8_t *frameData, PixelFormat format, int width, int height);
 
-	int convertPixFmt(const uint8_t *src, int srclen, uint8_t *dst, int dstlen, int width, int height, int srcfmt, int dstfmt);
+	int convertPixFmt(const uint8_t *src, int srclen, int srcw, int srch, PixelFormat srcfmt, 
+		uint8_t *dst, int dstlen, int dstw, int dsth, PixelFormat dstfmt);
+
 	///
 	/// @brief  Encode one audio frame (just encode, won't write encoded data to output file).
 	///

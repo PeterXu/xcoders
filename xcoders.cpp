@@ -7,7 +7,7 @@
 #include "FFmpegEncoder.h"
 #include "FFmpegDecoder.h"
 #include "LogTrace.h"
-#include "libyuv.h"
+#include "utils.h"
 
 #ifndef returnv_if_fail
 #define returnv_if_fail(p, v)  {if(!(p)) return (v); }
@@ -32,11 +32,6 @@ typedef struct xcoder_coder_t {
 	};
 }xcoder_coder_t;
 
-
-///==============
-static PixelFormat get_pixel_format(int colorspace, int *bitsnum=NULL);
-static bool ScaleYUVFrame(const char *src, unsigned int src_w, unsigned int src_h, int format,
-						  char *dst, unsigned int dst_w, unsigned int dst_h);
 
 int xcoder_create(xcoder_t *ppcoder, int ctype)
 {
@@ -116,6 +111,9 @@ int xcoder_open(xcoder_t coder, xcoder_callback_t cb, void *priv)
 			LOGE("[%s] cannot open coder!", __FUNCTION__);
 			return -1;
 		}
+	}else{
+		LOGE("[%s] invalid ctype!", __FUNCTION__);
+		return -1;
 	}
 
 	return 0;
@@ -128,23 +126,26 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 
 	if (pcoder->ctype == XCODER_ENCODER) {
 		int bitsnum = 0;
-		PixelFormat pmt = get_pixel_format(format.colorspace, &bitsnum);
-		returnv_if_fail(pmt != PIX_FMT_NONE, -1);
+		PixelFormat inpmt = (PixelFormat)get_pixel_format(format.colorspace, &bitsnum);
+		returnv_if_fail(inpmt != PIX_FMT_NONE, -1);
 
 		returnv_if_fail(pcoder->enc, -1);
 		returnv_if_fail(pcoder->enc->param, -1);
 
 		bool ballocbuffer = false;
 
-		// conver format to I420
+		// convert to x264's required format
 		uint8_t *pi420data = NULL;
-		int i420size = format.width * format.height * 12 / 8;
-		if (pmt != pcoder->enc->param->pixelFormat) {
+		int i420size = pcoder->enc->param->width * pcoder->enc->param->height * 12 / 8;
+		if (inpmt != pcoder->enc->param->pixelFormat ||
+			format.width != pcoder->enc->param->width || 
+			format.height != pcoder->enc->param->height) {
 			pi420data = new uint8_t[i420size];
-			int ret = pcoder->enc->encoder->convertPixFmt(data, size, pi420data, i420size, 
-				format.width, format.height, format.colorspace, (int)pcoder->enc->param->pixelFormat);
+			int ret = pcoder->enc->encoder->convertPixFmt(data, size, format.width, format.height, inpmt,
+				pi420data, i420size, pcoder->enc->param->width, pcoder->enc->param->height, pcoder->enc->param->pixelFormat);
 			if (ret != i420size) {
 				delete []pi420data;
+				LOGE("[%s] failed to convertPixFmt", __FUNCTION__);
 				return -1;
 			}
 			ballocbuffer = true;
@@ -155,26 +156,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 			}
 		}
 
-		// scale size
-		uint8_t *pscaledata = NULL;
-		int scalesize = pcoder->enc->param->width * pcoder->enc->param->height * 12 / 8;
-		if (format.width != pcoder->enc->param->width || format.height != pcoder->enc->param->height){
-			pscaledata = new uint8_t[scalesize];
-			if(!ScaleYUVFrame((const char *)pi420data, format.width, format.height, XCODER_FMT_I420, 
-				(char *)pscaledata, pcoder->enc->param->width, pcoder->enc->param->height))
-			{
-				if (ballocbuffer)
-					delete []pi420data;
-				return -1;
-			}
-			if (ballocbuffer)
-				delete []pi420data;
-			ballocbuffer = true;
-		}else {
-			pscaledata = pi420data;
-		}
-
-		int out_size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)pscaledata, 
+		int out_size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)pi420data, 
 				pcoder->enc->param->pixelFormat,
 				pcoder->enc->param->width, 
 				pcoder->enc->param->height);		
@@ -187,7 +169,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 			LOGE("[%s] encoded ret: %d", __FUNCTION__, out_size);
 		}
 		if (ballocbuffer) {
-			delete []pscaledata;
+			delete []pi420data;
 		}
 	}else if (pcoder->ctype == XCODER_DECODER) {
 		returnv_if_fail(pcoder->dec, -1);
@@ -202,6 +184,9 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 		}else {
 			LOGE("[%s] decoded ret: %d", __FUNCTION__, used_size);
 		}
+	}else{
+		LOGE("[%s] invalid ctype!", __FUNCTION__);
+		return -1;
 	}
 
 	return 0;
@@ -252,84 +237,4 @@ int xcoder_destroy(xcoder_t *ppcoder)
 	return 0;
 }
 
-///==========================================================
 
-static PixelFormat get_pixel_format(int colorspace, int *bitsnum)
-{
-	int bits = 0;
-	PixelFormat pmt = PIX_FMT_NONE;
-	switch(colorspace) {
-	case XCODER_FMT_I420:
-		pmt = PIX_FMT_YUV420P;
-		bits = 12;
-		break;
-	case XCODER_FMT_RGBA:
-		pmt = PIX_FMT_RGBA;
-		bits = 32;
-		break;
-	default:
-		break;
-	};
-
-	if (bitsnum) {
-		*bitsnum = bits;
-	}
-
-	return pmt;
-}
-
-// TODO: 
-bool ScaleYUVFrame(const char *src, unsigned int src_w, unsigned int src_h, int format,
-				   char *dst, unsigned int dst_w, unsigned int dst_h)
-{
-	if (!src || !dst) {
-		return false;
-	}
-
-	if (src_w < dst_w || src_h < dst_h) 
-	{
-		return false;
-	}
-
-	if (src_w == dst_w && src_h == dst_h) 
-	{
-		return true;
-	}
-
-	if (format == XCODER_FMT_I420) 
-	{
-		// for src
-		unsigned int src_ysize = src_w * src_h;
-		unsigned int src_uvsize = (src_ysize>>1);
-
-		unsigned int src_ylinesize = src_w;
-		unsigned int src_uvlinesize = src_ylinesize;
-
-		// for dst
-		unsigned int dst_ysize = dst_w * dst_h;
-		unsigned int dst_uvsize = (dst_ysize>>1);
-
-		unsigned int dst_ylinesize = dst_w;
-		unsigned int dst_uvlinesize = dst_ylinesize;
-
-		// scale
-		const uint8 * src_y = (const uint8 *)src;
-		const uint8 * src_u = src_y + src_ysize;
-		const uint8 * src_v = src_y + src_ysize + (src_uvsize>>1);
-
-		uint8 * dst_y = (uint8 *)dst;
-		uint8 * dst_u = dst_y + dst_ysize;
-		uint8 * dst_v = dst_y + dst_ysize + (dst_uvsize>>1);
-
-		if(libyuv::I420Scale(src_y, src_ylinesize, src_u, (src_uvlinesize>>1), src_v, (src_uvlinesize>>1), 
-			src_w, src_h,
-			dst_y, dst_ylinesize, dst_u, (dst_uvlinesize>>1), dst_v, (dst_uvlinesize>>1),
-			dst_w, dst_h,
-			libyuv::kFilterNone) == 0) 
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
