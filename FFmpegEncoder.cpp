@@ -416,6 +416,16 @@ int FFmpegEncoder::open()
 		videoCodecContext->time_base.den  = this->videoParam.frameRate;
 		videoCodecContext->time_base.num  = 1;
 
+		// tune for video encoding
+		videoCodecContext->gop_size = 20;
+		videoCodecContext->qmin = 3;
+		videoCodecContext->qmax = 30;
+		videoCodecContext->max_b_frames = 2;
+
+		videoCodecContext->me_method = ME_FULL;
+		videoCodecContext->me_range = 64;
+		videoCodecContext->partitions = X264_PART_I4X4 | X264_PART_I8X8 | X264_PART_P8X8 | X264_PART_P4X4 | X264_PART_B8X8;
+
 		// set the PixelFormat of the target encoded video
 		if (videoCodec->pix_fmts)
 		{
