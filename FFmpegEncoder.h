@@ -187,7 +187,7 @@ public:
 	///
 	int encodeVideoFrame(const uint8_t *frameData, PixelFormat format, int width, int height);
 
-	int convertPixFmt(const uint8_t *src, int srclen, int srcw, int srch, PixelFormat srcfmt, 
+	static int convertPixFmt(const uint8_t *src, int srclen, int srcw, int srch, PixelFormat srcfmt, 
 		uint8_t *dst, int dstlen, int dstw, int dsth, PixelFormat dstfmt);
 
 	///
@@ -257,7 +257,7 @@ private:
 	///
 	/// @return 0 when conversion is successful, otherwise a negative int
 	///
-	int convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const FFmpegVideoParam *dstParam);
+	static int convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFmpegVideoParam *srcParam, const FFmpegVideoParam *dstParam);
 
 	///
 	/// @brief  Encode an audio frame to the internal encoded data buffer

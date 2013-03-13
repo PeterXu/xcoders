@@ -21,6 +21,9 @@ typedef struct xcoder_encoder_t {
 typedef struct xcoder_decoder_t {
 	FFmpegDecoder  *decoder;
 	FFmpegVideoParam *param;
+	int outcsp;
+	uint8_t *cache;
+	int cache_size;
 }xcoder_decoder_t;
 
 typedef struct xcoder_coder_t {
@@ -40,10 +43,12 @@ int xcoder_create(xcoder_t *ppcoder, int ctype)
 		pcoder = new xcoder_coder_t;
 		pcoder->enc = new xcoder_encoder_t;
 		pcoder->ctype = ctype;
+		memset(pcoder->enc, 0, sizeof(xcoder_encoder_t));
 	}else if (ctype == XCODER_DECODER) {
 		pcoder = new xcoder_coder_t;
 		pcoder->dec = new xcoder_decoder_t;
 		pcoder->ctype = ctype;
+		memset(pcoder->dec, 0, sizeof(xcoder_decoder_t));
 	}else {
 		LOGE("[%s] invalid ctype:%d", __FUNCTION__, ctype);
 		return -1;
@@ -64,6 +69,8 @@ int xcoder_set_options(xcoder_t coder, xcoder_format_t format, int fps, int bitr
 	}else if (pcoder->ctype == XCODER_DECODER) {
 		returnv_if_fail(pcoder->dec, -1);
 		pcoder->dec->param = new FFmpegVideoParam(format.width, format.height, PIX_FMT_YUV420P, bitrate, fps, "h264");
+		// if set to XCODER_FMT_NONE, then decoded to default decoder's seetings, else use it
+		pcoder->dec->outcsp = format.colorspace;
 	}else {
 		LOGE("[%s] invalid ctype!", __FUNCTION__);
 		return -1;
@@ -141,7 +148,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 			format.width != pcoder->enc->param->width || 
 			format.height != pcoder->enc->param->height) {
 			pi420data = new uint8_t[i420size];
-			int ret = pcoder->enc->encoder->convertPixFmt(data, size, format.width, format.height, inpmt,
+			int ret = FFmpegEncoder::convertPixFmt(data, size, format.width, format.height, inpmt,
 				pi420data, i420size, pcoder->enc->param->width, pcoder->enc->param->height, pcoder->enc->param->pixelFormat);
 			if (ret != i420size) {
 				delete []pi420data;
@@ -177,10 +184,41 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 
 		int used_size = pcoder->dec->decoder->decodeVideoFrame((const uint8_t *)data, size);
 		if (used_size > 0) {
-			pcoder->cb(XCODER_CB_DECODED_FRAME, 
-				pcoder->dec->decoder->getVideoFrame(),
-				pcoder->dec->decoder->getVideoFrameSize(), 
-				NULL);
+			int bitsnum = 0;
+			PixelFormat outpmt = (PixelFormat)get_pixel_format(pcoder->dec->outcsp, &bitsnum);
+
+			int outlen = 0;
+			uint8_t *poutdata = NULL;
+			if (outpmt != PIX_FMT_NONE && outpmt != PIX_FMT_YUV420P) {
+				int outlen = pcoder->dec->param->width * pcoder->dec->param->height * bitsnum / 8;
+				if (pcoder->dec->cache == NULL || pcoder->dec->cache_size < outlen) {	
+					if (pcoder->dec->cache)
+						delete pcoder->dec->cache;
+					pcoder->dec->cache_size = outlen;
+					pcoder->dec->cache = new uint8_t[outlen];
+				}
+
+				int ret = FFmpegEncoder::convertPixFmt(
+					pcoder->dec->decoder->getVideoFrame(), 
+					pcoder->dec->decoder->getVideoFrameSize(), 
+					pcoder->dec->param->width, 
+					pcoder->dec->param->height, 
+					PIX_FMT_YUV420P,
+					pcoder->dec->cache, 
+					outlen, 
+					pcoder->enc->param->width, 
+					pcoder->enc->param->height, 
+					outpmt);
+				if (ret != outlen) {
+					LOGE("[%s] failed to convertPixFmt", __FUNCTION__);
+					return -1;
+				}
+				poutdata = pcoder->dec->cache;
+			}else {
+				poutdata = (uint8_t *)pcoder->dec->decoder->getVideoFrame();
+				outlen = pcoder->dec->decoder->getVideoFrameSize();
+			}
+			pcoder->cb(XCODER_CB_DECODED_FRAME, poutdata, outlen, NULL);
 		}else {
 			LOGE("[%s] decoded ret: %d", __FUNCTION__, used_size);
 		}
@@ -228,6 +266,8 @@ int xcoder_destroy(xcoder_t *ppcoder)
 			delete pcoder->dec->param;
 		if (pcoder->dec->decoder)
 			delete pcoder->dec->decoder;
+		if (pcoder->dec->cache)
+			delete pcoder->dec->cache;
 		delete pcoder->dec;
 	}
 

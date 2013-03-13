@@ -42,6 +42,7 @@ XCODERS_API int xcoder_create(xcoder_t *ppcoder, int ctype);
  * Format types	支持的输入数据颜色空间
  */
 enum xcoder_colorspace_t {
+    XCODER_FMT_NONE,
     XCODER_FMT_I420,
     XCODER_FMT_RGB24,
     XCODER_FMT_BGR24,
