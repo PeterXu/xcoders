@@ -183,14 +183,16 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 		returnv_if_fail(pcoder->dec->param, -1);
 
 		int used_size = pcoder->dec->decoder->decodeVideoFrame((const uint8_t *)data, size);
+		//LOGI("used_size=%d, decoded size=%d", used_size, pcoder->dec->decoder->getVideoFrameSize());
 		if (used_size > 0) {
 			int bitsnum = 0;
 			PixelFormat outpmt = (PixelFormat)get_pixel_format(pcoder->dec->outcsp, &bitsnum);
 
+			//LOGI("outpmt=%d, bitnum=%d", outpmt, bitsnum);
 			int outlen = 0;
 			uint8_t *poutdata = NULL;
 			if (outpmt != PIX_FMT_NONE && outpmt != PIX_FMT_YUV420P) {
-				int outlen = pcoder->dec->param->width * pcoder->dec->param->height * bitsnum / 8;
+				outlen = pcoder->dec->param->width * pcoder->dec->param->height * bitsnum / 8;
 				if (pcoder->dec->cache == NULL || pcoder->dec->cache_size < outlen) {	
 					if (pcoder->dec->cache)
 						delete pcoder->dec->cache;
@@ -209,6 +211,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 					pcoder->enc->param->width, 
 					pcoder->enc->param->height, 
 					outpmt);
+				//LOGI("outlen=%d, ret=%d", outlen, ret);
 				if (ret != outlen) {
 					LOGE("[%s] failed to convertPixFmt", __FUNCTION__);
 					return -1;
@@ -218,6 +221,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 				poutdata = (uint8_t *)pcoder->dec->decoder->getVideoFrame();
 				outlen = pcoder->dec->decoder->getVideoFrameSize();
 			}
+			//LOGI("outdata=0x%d, outlen=%d", (int)poutdata, outlen);
 			pcoder->cb(XCODER_CB_DECODED_FRAME, poutdata, outlen, NULL);
 		}else {
 			LOGE("[%s] decoded ret: %d", __FUNCTION__, used_size);

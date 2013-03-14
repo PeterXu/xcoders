@@ -417,14 +417,18 @@ int FFmpegEncoder::open()
 		videoCodecContext->time_base.num  = 1;
 
 		// tune for video encoding
-		videoCodecContext->gop_size = 20;
+		videoCodecContext->gop_size = 24;
 		videoCodecContext->qmin = 3;
-		videoCodecContext->qmax = 30;
-		videoCodecContext->max_b_frames = 2;
+		videoCodecContext->qmax = 33;
+		videoCodecContext->max_qdiff = 4;
+		videoCodecContext->qcompress = 0.6f;
 
+		videoCodecContext->me_range = 64;		
 		videoCodecContext->me_method = ME_FULL;
 		videoCodecContext->me_range = 64;
 		videoCodecContext->partitions = X264_PART_I4X4 | X264_PART_I8X8 | X264_PART_P8X8 | X264_PART_P4X4 | X264_PART_B8X8;
+		videoCodecContext->coder_type = FF_CODER_TYPE_AC;
+		videoCodecContext->max_b_frames = 1;
 
 		// set the PixelFormat of the target encoded video
 		if (videoCodec->pix_fmts)
