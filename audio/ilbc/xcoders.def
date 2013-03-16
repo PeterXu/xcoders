@@ -1,0 +1,124 @@
+EXPORTS
+    WebRtcIlbcfix_AbsQuant @1
+    WebRtcIlbcfix_AbsQuantLoop @2
+    WebRtcIlbcfix_AugmentedCbCorr @3
+    WebRtcIlbcfix_BwExpand @4
+    WebRtcIlbcfix_CbConstruct @5
+    WebRtcIlbcfix_CbMemEnergy @6
+    WebRtcIlbcfix_CbMemEnergyAugmentation @7
+    WebRtcIlbcfix_CbMemEnergyCalc @8
+    WebRtcIlbcfix_CbSearch @9
+    WebRtcIlbcfix_CbSearchCore @10
+    WebRtcIlbcfix_CbUpdateBestIndex @11
+    WebRtcIlbcfix_Chebyshev @12
+    WebRtcIlbcfix_CompCorr @13
+    WebRtcIlbcfix_CreateAugmentedVec @14
+    WebRtcIlbcfix_Decode @15
+    WebRtcIlbcfix_Decode20Ms @16
+    WebRtcIlbcfix_Decode30Ms @17
+    WebRtcIlbcfix_DecodeImpl @18
+    WebRtcIlbcfix_DecodePlc @19
+    WebRtcIlbcfix_DecodeResidual @20
+    WebRtcIlbcfix_DecoderAssign @21
+    WebRtcIlbcfix_DecoderCreate @22
+    WebRtcIlbcfix_DecoderFree @23
+    WebRtcIlbcfix_DecoderInit @24
+    WebRtcIlbcfix_DecoderInit20Ms @25
+    WebRtcIlbcfix_DecoderInterpolateLsp @26
+    WebRtcIlbcfix_Decoderinit30Ms @27
+    WebRtcIlbcfix_DoThePlc @28
+    WebRtcIlbcfix_Encode @29
+    WebRtcIlbcfix_EncodeImpl @30
+    WebRtcIlbcfix_EncoderAssign @31
+    WebRtcIlbcfix_EncoderCreate @32
+    WebRtcIlbcfix_EncoderFree @33
+    WebRtcIlbcfix_EncoderInit @34
+    WebRtcIlbcfix_EnergyInverse @35
+    WebRtcIlbcfix_EnhUpsample @36
+    WebRtcIlbcfix_Enhancer @37
+    WebRtcIlbcfix_EnhancerInterface @38
+    WebRtcIlbcfix_FilteredCbVecs @39
+    WebRtcIlbcfix_FrameClassify @40
+    WebRtcIlbcfix_GainDequant @41
+    WebRtcIlbcfix_GainQuant @42
+    WebRtcIlbcfix_GetCbVec @43
+    WebRtcIlbcfix_GetLspPoly @44
+    WebRtcIlbcfix_GetSyncSeq @45
+    WebRtcIlbcfix_HpInput @46
+    WebRtcIlbcfix_HpOutput @47
+    WebRtcIlbcfix_IndexConvDec @48
+    WebRtcIlbcfix_IndexConvEnc @49
+    WebRtcIlbcfix_InitDecode @50
+    WebRtcIlbcfix_InitEncode @51
+    WebRtcIlbcfix_Interpolate @52
+    WebRtcIlbcfix_InterpolateSamples @53
+    WebRtcIlbcfix_LpcEncode @54
+    WebRtcIlbcfix_Lsf2Lsp @55
+    WebRtcIlbcfix_Lsf2Poly @56
+    WebRtcIlbcfix_LsfCheck @57
+    WebRtcIlbcfix_LsfInterpolate2PloyEnc @58
+    WebRtcIlbcfix_Lsp2Lsf @59
+    WebRtcIlbcfix_LspInterpolate2PolyDec @60
+    WebRtcIlbcfix_MyCorr @61
+    WebRtcIlbcfix_NearestNeighbor @62
+    WebRtcIlbcfix_NetEqPlc @63
+    WebRtcIlbcfix_PackBits @64
+    WebRtcIlbcfix_Poly2Lsf @65
+    WebRtcIlbcfix_Poly2Lsp @66
+    WebRtcIlbcfix_Refiner @67
+    WebRtcIlbcfix_SimpleInterpolateLsf @68
+    WebRtcIlbcfix_SimpleLpcAnalysis @69
+    WebRtcIlbcfix_SimpleLsfDeQ @70
+    WebRtcIlbcfix_SimpleLsfQ @71
+    WebRtcIlbcfix_Smooth @72
+    WebRtcIlbcfix_Smooth_odata @73
+    WebRtcIlbcfix_SortSq @74
+    WebRtcIlbcfix_SplitVq @75
+    WebRtcIlbcfix_StateConstruct @76
+    WebRtcIlbcfix_StateSearch @77
+    WebRtcIlbcfix_SwapBytes @78
+    WebRtcIlbcfix_UnpackBits @79
+    WebRtcIlbcfix_Vq3 @80
+    WebRtcIlbcfix_Vq4 @81
+    WebRtcIlbcfix_Window32W32 @82
+    WebRtcIlbcfix_XcorrCoef @83
+    WebRtcIlbcfix_kAcosDerivative @84 DATA
+    WebRtcIlbcfix_kAlpha @85 DATA
+    WebRtcIlbcfix_kCbFiltersRev @86 DATA
+    WebRtcIlbcfix_kChooseFrgQuant @87 DATA
+    WebRtcIlbcfix_kCos @88 DATA
+    WebRtcIlbcfix_kCosDerivative @89 DATA
+    WebRtcIlbcfix_kCosGrid @90 DATA
+    WebRtcIlbcfix_kEnhPlocs @91 DATA
+    WebRtcIlbcfix_kEnhPolyPhaser @92 DATA
+    WebRtcIlbcfix_kEnhWt @93 DATA
+    WebRtcIlbcfix_kFilterRange @94 DATA
+    WebRtcIlbcfix_kFrgQuantMod @95 DATA
+    WebRtcIlbcfix_kGain @96 DATA
+    WebRtcIlbcfix_kGainSq3 @97 DATA
+    WebRtcIlbcfix_kGainSq4 @98 DATA
+    WebRtcIlbcfix_kGainSq5 @99 DATA
+    WebRtcIlbcfix_kGainSq5Sq @100 DATA
+    WebRtcIlbcfix_kHpInCoefs @101 DATA
+    WebRtcIlbcfix_kHpOutCoefs @102 DATA
+    WebRtcIlbcfix_kLpFiltCoefs @103 DATA
+    WebRtcIlbcfix_kLpcAsymWin @104 DATA
+    WebRtcIlbcfix_kLpcChirpSyntDenum @105 DATA
+    WebRtcIlbcfix_kLpcChirpWeightDenum @106 DATA
+    WebRtcIlbcfix_kLpcLagWin @107 DATA
+    WebRtcIlbcfix_kLpcWin @108 DATA
+    WebRtcIlbcfix_kLsfCb @109 DATA
+    WebRtcIlbcfix_kLsfDimCb @110 DATA
+    WebRtcIlbcfix_kLsfMean @111 DATA
+    WebRtcIlbcfix_kLsfSizeCb @112 DATA
+    WebRtcIlbcfix_kLsfWeight20ms @113 DATA
+    WebRtcIlbcfix_kLsfWeight30ms @114 DATA
+    WebRtcIlbcfix_kLspMean @115 DATA
+    WebRtcIlbcfix_kPlcPerSqr @116 DATA
+    WebRtcIlbcfix_kPlcPfSlope @117 DATA
+    WebRtcIlbcfix_kPlcPitchFact @118 DATA
+    WebRtcIlbcfix_kScale @119 DATA
+    WebRtcIlbcfix_kSearchRange @120 DATA
+    WebRtcIlbcfix_kStartSequenceEnrgWin @121 DATA
+    WebRtcIlbcfix_kStateSq3 @122 DATA
+    WebRtcIlbcfix_version @123
