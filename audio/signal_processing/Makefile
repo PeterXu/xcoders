@@ -5,7 +5,7 @@ CC = gcc
 CXX = g++
 INCLUDES = -Iinterface -I.. -I../signal_processing/include
 LIBS = 
-CFLAGS = -Wall -Werror 
+CFLAGS = -Wall -Werror -O2
 LINKFLAGS=
 
 #C_SOURCES = $(wildcard *.c)
