@@ -221,7 +221,6 @@ private:
 	AVStream *videoStream;          ///< The video output stream
 	AVStream *audioStream;          ///< The audio output stream
 
-	AVPicture *videoFrame;          ///< The temporary video frame for pixel format conversion
 	uint8_t *videoBuffer;       ///< The video output buffer
 	int     videoBufferSize;    ///< The size of video output buffer
 
