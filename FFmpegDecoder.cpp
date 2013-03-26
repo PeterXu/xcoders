@@ -3,7 +3,7 @@
 #include "LogTrace.h"
 
 FFmpegDecoder::FFmpegDecoder(const FFmpegVideoParam &vp, const FFmpegAudioParam &ap) : 
-videoParam(vp), audioParam(ap)
+	videoParam(vp), audioParam(ap)
 {
 	init();
 }
@@ -41,7 +41,7 @@ void FFmpegDecoder::init()
 	this->decodeAudio      = !this->audioParam.empty();
 
 	// register all codecs and demux
-	av_register_all();
+	avcodec_register_all();
 }
 
 FFmpegDecoder::~FFmpegDecoder()
@@ -105,47 +105,41 @@ double FFmpegDecoder::getDecodeTimeStamp() const
 
 int FFmpegDecoder::open()
 {
-	LOGI("FFmpegDecoder.open, begin!");
-	if (this->opened)
-	{
-		LOGW("FFmpegDecoder.open, try to reopen!");
+	LOGI("FFmpegDecoder::open, begin!");
+	if (this->opened) {
+		LOGW("FFmpegDecoder::open, try to reopen!");
 		return -1;
 	}
 
 	if (this->videoParam.videoCodecName.empty() && 
-		this->audioParam.audioCodecName.empty())
-	{
-		LOGE("FFmpegDecoder.open, no a/v codec name");
+		this->audioParam.audioCodecName.empty()) {
+		LOGE("FFmpegDecoder::open, no a/v codec name");
 		return -1;
 	}
 
 	// allocate the output media context
 	this->inputContext = avformat_alloc_context();
-	if (!this->inputContext)
-	{
-		LOGE("FFmpegDecoder.open, failed to alloc context");
+	if (!this->inputContext) {
+		LOGE("FFmpegDecoder::open, failed to alloc context");
 		return -1;
 	}
 
 	// video related initialization if necessary
-	if (this->decodeVideo)
-	{
+	if (this->decodeVideo) {
 		// find the video encoder
 		AVCodec *videoCodec = NULL;
 
 		// use the codec name preferentially if it is specified in the input param
 		videoCodec = avcodec_find_decoder_by_name(this->videoParam.videoCodecName.c_str());
-		if (!videoCodec)
-		{
-			LOGE("FFmpegDecoder.open, find no video codec!");
+		if (!videoCodec) {
+			LOGE("FFmpegDecoder::open, find no video codec!");
 			return -1;
 		}
 
 		// add the video stream with stream id 0
 		this->videoStream = av_new_stream(this->inputContext, 0);
-		if (!this->videoStream)
-		{
-			LOGE("FFmpegDecoder.open, failed to new video stream!");
+		if (!this->videoStream)	{
+			LOGE("FFmpegDecoder::open, failed to new video stream!");
 			return -1;
 		}
 
@@ -160,11 +154,9 @@ int FFmpegDecoder::open()
 		this->videoStream->r_frame_rate.den = this->videoParam.frameRate;
 		this->videoStream->r_frame_rate.num = 1;
 
-
 		// open the video codec
-		if (avcodec_open(videoCodecContext, videoCodec))
-		{
-			LOGE("FFmpegDecoder.open, find but failed to open video codec!");
+		if (avcodec_open(videoCodecContext, videoCodec)) {
+			LOGE("FFmpegDecoder::open, find but failed to open video codec!");
 			return -1;
 		}
 
@@ -216,22 +208,20 @@ int FFmpegDecoder::open()
 	}
 
 	this->opened = true;
-	LOGI("FFmpegDecoder.open, end!");
+	LOGI("FFmpegDecoder::open, end!");
 	return 0;
 }
 
 void FFmpegDecoder::close()
 {
-	if (!this->opened)
-	{
+	if (!this->opened) {
 		return;
 	}
 
 	this->currentPacketPts = 0;
 	this->currentPacketDts = 0;
 
-	if (this->decodeVideo)
-	{
+	if (this->decodeVideo) {
 		avcodec_close(this->videoStream->codec);
 		av_freep(&this->videoFrameBuffer);
 		av_freep(&this->videoStream);
@@ -239,8 +229,7 @@ void FFmpegDecoder::close()
 		this->videoBufferSize = 0;
 	}
 
-	if (this->decodeAudio)
-	{
+	if (this->decodeAudio) {
 		avcodec_close(this->audioStream->codec);
 		av_freep(&this->audioFrameBuffer);
 		av_freep(&this->audioStream);
@@ -257,14 +246,12 @@ void FFmpegDecoder::close()
 
 int FFmpegDecoder::decodeVideoFrame(const uint8_t *frameData, int dataSize, int64_t pts, int64_t dts)
 {
-	if (!this->opened)
-	{
+	if (!this->opened) {
 		LOGE("FFmpegDecoder::decodeVideoFrame, not open");
 		return -1;
 	}
 
-	if (!this->decodeVideo)
-	{
+	if (!this->decodeVideo) {
 		LOGE("FFmpegDecoder::decodeVideoFrame, cannot decode video");
 		return -1;
 	}
@@ -325,15 +312,13 @@ int FFmpegDecoder::decodeVideoFrame(AVPacket &avpkt)
 	decodedSize = avcodec_decode_video2(this->videoStream->codec, &videoFrame, &gotPicture, &avpkt);
 
 	this->videoFrameSize = 0;
-	if (gotPicture != 0)
-	{
+	if (gotPicture != 0) {
 		// read the data to the buffer
 		avpicture_layout((AVPicture*)&videoFrame, this->videoParam.pixelFormat, this->videoParam.width, this->videoParam.height, this->videoFrameBuffer, this->videoBufferSize);
 		this->videoFrameSize = this->videoBufferSize;
 	}
 
-	if (decodedSize < 0)
-	{
+	if (decodedSize < 0) {
 		LOGI("FFmpegDecoder.decodeVideoFrame, error!");
 		return -1;
 	}
