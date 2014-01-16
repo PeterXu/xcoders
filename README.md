@@ -1,3 +1,6 @@
+xcoder build instructions
+=========================
+
 1. download
 http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-1.5.1.exe
 
