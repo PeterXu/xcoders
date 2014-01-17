@@ -8,7 +8,10 @@ xcoder build instructions
 
 2. 代码
 (a) 解压缩IvyVideo到c:\workspace
+	代码地址: https://github.com/PeterXu/IvyVideo/archive/master.zip
+	
 (b) 解压缩xcoders到c:\workspace
+	代码地址: https://github.com/PeterXu/xcoders/archive/master.zip
 
 3. 编译
 启动MozillaBuild下的start-msvc9.bat命令行，进行代码编译
@@ -31,7 +34,7 @@ make
 (a). 系统dlls(在xcoders里面)
 libgcc_s_dw2-1.dll, libstdc++-6.dll, libpthread-2.dll
 
-(2). 编译生成的dlls所在目录
+(b). 编译生成的dlls所在目录
 workspace/xcoders/xcoders.dll
 workspace/IvyVideo/trunk/ivyffmpeg/ffmpeg/libavcodec/avcodec.dll
 workspace/IvyVideo/trunk/ivyffmpeg/ffmpeg/libavformat/avformat-52.dll
