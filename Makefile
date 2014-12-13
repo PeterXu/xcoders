@@ -21,11 +21,10 @@ LINKFLAGS = -shared -Wl,--output-def,$(TARGET).def,--out-implib,$(TARGET).lib
 C_SOURCES = $(wildcard *.c)
 C_OBJS = $(patsubst %.c, %.o, $(C_SOURCES))
 
-CPP_SOURCES = LogTrace.cpp \
-	FFmpegDecoder.cpp  \
-	FFmpegEncoder.cpp  \
-	FFmpegVideoParam.cpp \
-	FFmpegAudioParam.cpp \
+CPP_SOURCES = log.cpp \
+	ffdecoder.cpp  \
+	ffencoder.cpp  \
+	ffparam.cpp \
 	utils.cpp \
 	xacoders.cpp \
 	xcoders.cpp
