@@ -44,7 +44,7 @@ FFVideoParam::FFVideoParam(
 bool FFVideoParam::empty()
 {
     return width < 1 && height < 1 && pixelFmt == PIX_FMT_NONE  && 
-        bitRate < 1 && frameRate < 1 && videoCodecName == "";
+        bitRate < 1 && frameRate < 1 && codecName == "";
 }
 
 bool FFVideoParam::isValid()

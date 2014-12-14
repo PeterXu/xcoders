@@ -1,13 +1,13 @@
 TARGET = xcoders
 PREFIX_BIN =
-IVYFFMPEG_ROOT=../IvyVideo/trunk/ivyffmpeg
+FFMPEG_ROOT=ffmpeg
 
 CC = gcc
 CXX = g++
 
-# for ffmpeg
-INCLUDES = -I${IVYFFMPEG_ROOT}/ffmpeg/
-LIBS = -L${IVYFFMPEG_ROOT}/ffmpeg/build/win32/lib -lavcodec -lavutil -lavformat -lswscale
+# for video and ffmpeg
+INCLUDES = -I${FFMPEG_ROOT}/
+LIBS = -L${FFMPEG_ROOT}/build/win32/lib -lavcodec -lavutil -lavformat -lswscale
 CFLAGS = -DXCODERS_EXPORTS
 
 # for audio
@@ -16,12 +16,17 @@ LIBS += -Laudio/ilbc -lilbc -Laudio/signal_processing -lsgl
 CFLAGS += -DXACODERS_EXPORTS
 
 CFLAGS += -Wall -Werror -O2
+ifdef WIN32
 LINKFLAGS = -shared -Wl,--output-def,$(TARGET).def,--out-implib,$(TARGET).lib
+else
+LINKFLAGS = -shared 
+endif
 
 C_SOURCES = $(wildcard *.c)
 C_OBJS = $(patsubst %.c, %.o, $(C_SOURCES))
 
-CPP_SOURCES = log.cpp \
+CPP_SOURCES = \
+	log.cpp \
 	ffdecoder.cpp  \
 	ffencoder.cpp  \
 	ffparam.cpp \
@@ -49,7 +54,7 @@ distclean: clean
 	make -C audio/signal_processing clean
 
 install: $(TARGET)
-	cp $(TARGET).dll $(PREFIX_BIN)
+	cp -f $(TARGET).dll $(PREFIX_BIN)
 
 uninstall:
 	rm -f $(PREFIX)/$(PREFIX_BIN)

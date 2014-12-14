@@ -1,12 +1,11 @@
 // xcoders.cpp : 定义 DLL 应用程序的导出函数。
 //
 
-#include "stdafx.h"
 #include "xcoders.h"
 
-#include "FFmpegEncoder.h"
-#include "FFmpegDecoder.h"
-#include "LogTrace.h"
+#include "ffencoder.h"
+#include "ffdecoder.h"
+#include "log.h"
 #include "utils.h"
 
 #ifndef returnv_if_fail
@@ -18,13 +17,13 @@
 #endif
 
 typedef struct xcoder_encoder_t {
-	FFmpegEncoder *encoder;
-	FFmpegVideoParam *param;
+	FFEncoder *encoder;
+	FFVideoParam *param;
 }xcoder_encoder_t;
 
 typedef struct xcoder_decoder_t {
-	FFmpegDecoder  *decoder;
-	FFmpegVideoParam *param;
+	FFDecoder  *decoder;
+	FFVideoParam *param;
 	int outcsp;
 }xcoder_decoder_t;
 
@@ -70,10 +69,10 @@ int xcoder_set_options(xcoder_t coder, xcoder_format_t format, int fps, int bitr
 
 	if (pcoder->ctype == XCODER_ENCODER) {
 		returnv_if_fail(pcoder->enc, -1);
-		pcoder->enc->param = new FFmpegVideoParam(format.width, format.height, PIX_FMT_YUV420P, bitrate, fps, "libx264");
+		pcoder->enc->param = new FFVideoParam(format.width, format.height, PIX_FMT_YUV420P, bitrate, fps, "libx264");
 	}else if (pcoder->ctype == XCODER_DECODER) {
 		returnv_if_fail(pcoder->dec, -1);
-		pcoder->dec->param = new FFmpegVideoParam(format.width, format.height, PIX_FMT_YUV420P, bitrate, fps, "h264");
+		pcoder->dec->param = new FFVideoParam(format.width, format.height, PIX_FMT_YUV420P, bitrate, fps, "h264");
 		// if set to XCODER_FMT_NONE, then decoded to default decoder's seetings, else use it
 		pcoder->dec->outcsp = format.colorspace;
 	}else {
@@ -96,14 +95,14 @@ int xcoder_open(xcoder_t coder, xcoder_callback_t cb, void *priv)
 		returnv_if_fail(pcoder->enc->param, -1);
 		returnv_if_fail(pcoder->enc->encoder == NULL, -1);
 
-		FFmpegVideoParam videoParam(
+		FFVideoParam videoParam(
 			pcoder->enc->param->width, 
 			pcoder->enc->param->height, 
-			pcoder->enc->param->pixelFormat,
+			pcoder->enc->param->pixelFmt,
 			pcoder->enc->param->bitRate,
 			pcoder->enc->param->frameRate,
-			pcoder->enc->param->videoCodecName);
-		pcoder->enc->encoder = new FFmpegEncoder(videoParam);
+			pcoder->enc->param->codecName);
+		pcoder->enc->encoder = new FFEncoder(videoParam);
 		if (pcoder->enc->encoder->open() != 0) {
 			LOGE("[%s] cannot open coder!", __FUNCTION__);
 			return -1;
@@ -113,14 +112,14 @@ int xcoder_open(xcoder_t coder, xcoder_callback_t cb, void *priv)
 		returnv_if_fail(pcoder->dec->param, -1);
 		returnv_if_fail(pcoder->dec->decoder == NULL, -1);
 
-		FFmpegVideoParam videoParam(
+		FFVideoParam videoParam(
 			pcoder->dec->param->width, 
 			pcoder->dec->param->height, 
-			pcoder->dec->param->pixelFormat,
+			pcoder->dec->param->pixelFmt,
 			pcoder->dec->param->bitRate,
 			pcoder->dec->param->frameRate,
-			pcoder->dec->param->videoCodecName);
-		pcoder->dec->decoder = new FFmpegDecoder(videoParam);
+			pcoder->dec->param->codecName);
+		pcoder->dec->decoder = new FFDecoder(videoParam);
 		if (pcoder->dec->decoder->open() != 0) {
 			LOGE("[%s] cannot open coder!", __FUNCTION__);
 			return -1;
@@ -149,7 +148,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 		// convert to x264's required format
 		uint8_t *pi420data = NULL;
 		int i420size = pcoder->enc->param->width * pcoder->enc->param->height * 12 / 8;
-		if (inpmt != pcoder->enc->param->pixelFormat ||
+		if (inpmt != pcoder->enc->param->pixelFmt ||
 			format.width != pcoder->enc->param->width || 
 			format.height != pcoder->enc->param->height) {
 			if (pcoder->cache == NULL || pcoder->cache_size < i420size) {	
@@ -159,8 +158,8 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 				pcoder->cache = new uint8_t[i420size];
 			}
 
-			int ret = FFmpegEncoder::convertPixFmt(data, size, format.width, format.height, inpmt,
-				pcoder->cache, i420size, pcoder->enc->param->width, pcoder->enc->param->height, pcoder->enc->param->pixelFormat);
+			int ret = FFEncoder::convertPixFmt(data, size, format.width, format.height, inpmt,
+				pcoder->cache, i420size, pcoder->enc->param->width, pcoder->enc->param->height, pcoder->enc->param->pixelFmt);
 			if (ret != i420size) {
 				LOGE("[%s] failed to convertPixFmt", __FUNCTION__);
 				return -1;
@@ -175,7 +174,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 		
 		int out_size = 0;
 		out_size = pcoder->enc->encoder->encodeVideoFrame((const uint8_t *)pi420data, 
-				pcoder->enc->param->pixelFormat,
+				pcoder->enc->param->pixelFmt,
 				pcoder->enc->param->width, 
 				pcoder->enc->param->height);			
 		if (out_size > 0) {
@@ -208,7 +207,7 @@ int xcoder_code_frame(xcoder_t coder, unsigned char *data, int size, xcoder_form
 					pcoder->cache = new uint8_t[outlen];
 				}
 
-				int ret = FFmpegEncoder::convertPixFmt(
+				int ret = FFEncoder::convertPixFmt(
 					pcoder->dec->decoder->getVideoFrame(), 
 					pcoder->dec->decoder->getVideoFrameSize(), 
 					pcoder->dec->param->width, 

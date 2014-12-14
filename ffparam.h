@@ -2,10 +2,13 @@
 #define _FFPARAM_H_
 
 #include <string>
+extern "C" {
+#include "libavformat/avformat.h"
+}
 
-class FF_EXPORT FFParam
+class FFParam
 {
-pulic:
+public:
     virtual ~FFParam() {}
 
     /**
@@ -19,7 +22,7 @@ pulic:
     virtual bool isValid() = 0;
 };
 
-class FF_EXPORT FFAudioParam : public FFParam
+class FFAudioParam : public FFParam
 {
 public:
     /**
@@ -48,7 +51,7 @@ public:
 };
 
 
-class FF_EXPORT FFVideoParam : public FFParam
+class FFVideoParam : public FFParam
 {
 public:
     /**

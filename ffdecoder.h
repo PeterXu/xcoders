@@ -10,9 +10,9 @@ extern "C" {
 
 //
 // The video decoder class for wrapping FFmpeg decoding API.
+//  There may be several audio/video streams in the input file. However, only one stream is used here.
 //
-// @todo   There may be several audio/video streams in the input file. However, only one stream is used here.
-//
+
 class FFDecoder
 {
 public:

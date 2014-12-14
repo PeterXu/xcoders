@@ -192,11 +192,9 @@ int FFEncoder::convertPixFmt(AVPicture *srcPic, AVPicture *dstPic, const FFVideo
 }
 
 
-//////////////////////////////////////////////////////////////////////////
 //
 //  Methods For Audio
 //
-//////////////////////////////////////////////////////////////////////////
 
 const uint8_t *FFEncoder::getAudioEncodedBuffer() const
 {
@@ -233,19 +231,21 @@ int FFEncoder::getAudioFrameSize() const
 	}
 	else
 	{
+#if 0
 		// hack for PCM audio codec
-		//frameSize = this->audioBufferSize / this->audioParam.channels;
-		//switch (this->audioStream->codec->codec_id)
-		//{
-		//    case CODEC_ID_PCM_S16LE:
-		//    case CODEC_ID_PCM_S16BE:
-		//    case CODEC_ID_PCM_U16LE:
-		//    case CODEC_ID_PCM_U16BE:
-		//        frameSize >>= 1;
-		//        break;
-		//    default:
-		//        break;
-		//}
+		frameSize = this->audioBufferSize / this->audioParam.channels;
+		switch (this->audioStream->codec->codec_id)
+		{
+		    case CODEC_ID_PCM_S16LE:
+		    case CODEC_ID_PCM_S16BE:
+		    case CODEC_ID_PCM_U16LE:
+		    case CODEC_ID_PCM_U16BE:
+		        frameSize >>= 1;
+		        break;
+		    default:
+		        break;
+		}
+#endif
 		frameSize = this->audioBufferSize;  // including all channels, return bytes directly
 	}
 	return frameSize;
@@ -327,11 +327,9 @@ int FFEncoder::encodeAudioData(short *frameData, int dataSize)
 }
 
 
-//////////////////////////////////////////////////////////////////////////
 //
-//  Other Methods
+// Other Methods
 //
-//////////////////////////////////////////////////////////////////////////
 
 int FFEncoder::open()
 {
@@ -442,11 +440,9 @@ int FFEncoder::open()
 		}
 
 		// find the audio encoder
-		AVCodec *audioCodec = NULL;
-
 		// use the codec name preferentially if it is specified in the input param
+		AVCodec *audioCodec = NULL;
 		audioCodec = avcodec_find_encoder_by_name(this->audioParam.codecName.c_str());
-
 		if (!audioCodec)
 		{
 			LOGE("FFEncoder.open, invalid audio codec!");

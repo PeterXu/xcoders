@@ -1,6 +1,5 @@
-#include "stdafx.h"
-#include "FFDecoder.h"
-#include "LogTrace.h"
+#include "ffdecoder.h"
+#include "log.h"
 
 FFDecoder::FFDecoder(const FFVideoParam &vp, const FFAudioParam &ap) : 
     videoParam(vp), audioParam(ap)

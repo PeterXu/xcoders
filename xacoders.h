@@ -1,10 +1,14 @@
 #ifndef _XACODERS_H_
 #define _XACODERS_H_
 
+#ifdef WIN32
 #ifdef XACODERS_EXPORTS
 #define XACODERS_API extern "C" __declspec(dllexport)
 #else
 #define XACODERS_API extern "C" __declspec(dllimport)
+#endif
+#else
+#define XACODERS_API
 #endif
 
 /**
